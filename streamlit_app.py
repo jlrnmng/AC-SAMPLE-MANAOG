@@ -2,7 +2,11 @@ import streamlit as st
 
 st.title("Alan Ibo jr Pogi")
 st.write(
-    "Adobo Recipe: Marinate meat (chicken/pork) in soy sauce, vinegar, garlic, bay leaves, and pepper for 30+ mins, then simmer in the marinade until tender (~30-45 mins). Optional: brown meat first for crispiness, add water if too salty, and serve with rice."
+    """[Verse 1: Daniel Caesar] You don't know babe, when you hold me and kiss me slowly it's the sweetest thing, And it don't change if I had it my way, You would know that you are 
+    [Pre-Chorus: Daniel Caesar] You're the coffee that I need in the morning, You're my sunshine in the rain when it's pouring, Won't you give yourself to me, Give it all, oh 
+    [Chorus: Daniel Caesar & H.E.R.] I just wanna see, I just wanna see how beautiful you are, You know that I see it, I know you're a star, Where you go I'll follow, No matter how far, If life is a movie, oh you're the best part, oh oh oh, You're the best part, oh oh oh, Best part 
+    [Verse 2: H.E.R.] It's this sunrise and those brown eyes, yes, You're the one that I desire when we wake up, And then we head out, ooh yeah I just wanna be, just wanna be here with you, oh 
+    [Pre-Chorus: H.E.R.] You're my water when I'm stuck in the desert, You're the Tylenol I take when my head hurts, You're the sunshine on my life, Oh, I just wanna see how beautiful you are, You know that I see it, I know you're a star, Where you go I'll follow, No matter how far, If life is a movie, then you're the best part, oh oh oh, You're the best part, oh oh oh, Best part"""
 )
 import streamlit as st
 
