@@ -2,7 +2,7 @@ import streamlit as st
 
 st.title("Alan Ibo jr Pogi")
 st.write(
-    "Let's start building! For help and inspiration, head over to [docs.streamlit.io](https://docs.streamlit.io/)."
+    "Adobo Recipe: Marinate meat (chicken/pork) in soy sauce, vinegar, garlic, bay leaves, and pepper for 30+ mins, then simmer in the marinade until tender (~30-45 mins). Optional: brown meat first for crispiness, add water if too salty, and serve with rice."
 )
 import streamlit as st
 
