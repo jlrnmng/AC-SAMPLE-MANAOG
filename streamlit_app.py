@@ -1,4 +1,7 @@
 import streamlit as st
+import random
+import math
+from sympy import isprime
 
 st.title("Alan Ibo jr Pogi")
 st.write(
@@ -9,86 +12,117 @@ st.write(
     [Pre-Chorus: H.E.R.] You're my water when I'm stuck in the desert, You're the Tylenol I take when my head hurts, You're the sunshine on my life, Oh, I just wanna see how beautiful you are, You know that I see it, I know you're a star, Where you go I'll follow, No matter how far, If life is a movie, then you're the best part, oh oh oh, You're the best part, oh oh oh, Best part"""
 )
 
-import math
+def extended_gcd(a, b):
+    if a == 0:
+        return (b, 0, 1)
+    else:
+        g, y, x = extended_gcd(b % a, a)
+        return (g, x - (b // a) * y, y)
 
-def calculate():
-    try:
-        if st.session_state.operation == "=":
-            st.session_state.result = eval(st.session_state.equation)
-            st.session_state.equation = str(st.session_state.result)
-        elif st.session_state.operation == "C":
-            st.session_state.equation = ""
-            st.session_state.result = 0
-        elif st.session_state.operation == "⌫":
-            st.session_state.equation = st.session_state.equation[:-1]
-        elif st.session_state.operation == "M+":
-            st.session_state.memory += eval(st.session_state.equation)
-        elif st.session_state.operation == "M-":
-            st.session_state.memory -= eval(st.session_state.equation)
-        elif st.session_state.operation == "MR":
-            st.session_state.equation += str(st.session_state.memory)
-        elif st.session_state.operation == "MC":
-            st.session_state.memory = 0
-        else:
-            st.session_state.equation += st.session_state.operation
-    except:
-        st.session_state.equation = "Error"
+def modinv(a, m):
+    g, x, y = extended_gcd(a, m)
+    if g != 1:
+        return None  # modular inverse doesn't exist
+    else:
+        return x % m
 
-# Initialize session state
-if "equation" not in st.session_state:
-    st.session_state.equation = ""
-    st.session_state.result = 0
-    st.session_state.memory = 0
+def generate_prime(bits=8):
+    while True:
+        p = random.getrandbits(bits)
+        if isprime(p):
+            return p
 
-# UI Layout
-st.title("🔬 Scientific Calculator")
+def generate_keypair(bits=8):
+    p = generate_prime(bits)
+    q = generate_prime(bits)
+    
+    while p == q:
+        q = generate_prime(bits)
+    
+    n = p * q
+    phi = (p-1) * (q-1)
+    
+    # Choose e such that 1 < e < phi and gcd(e, phi) = 1
+    e = random.randrange(1, phi)
+    while math.gcd(e, phi) != 1:
+        e = random.randrange(1, phi)
+    
+    # Compute d, the modular inverse of e
+    d = modinv(e, phi)
+    
+    return ((e, n), (d, n))
+
+def encrypt(pk, plaintext):
+    e, n = pk
+    cipher = [pow(ord(char), e, n) for char in plaintext]
+    return cipher
+
+def decrypt(pk, ciphertext):
+    d, n = pk
+    plain = [chr(pow(char, d, n)) for char in ciphertext]
+    return ''.join(plain)
+
+# Streamlit UI
+st.title("🔐 RSA Encryption/Decryption Tool")
+st.write("""
+This app demonstrates the RSA algorithm for public-key cryptography.
+You can generate keys, encrypt messages, and decrypt ciphertext.
+""")
+
+st.sidebar.header("Key Generation")
+key_size = st.sidebar.selectbox("Key Size (bits)", [8, 16, 32, 64], index=0)
+
+if st.sidebar.button("Generate New Key Pair"):
+    public_key, private_key = generate_keypair(key_size)
+    st.session_state.public_key = public_key
+    st.session_state.private_key = private_key
+
+if 'public_key' in st.session_state:
+    st.sidebar.write("Public Key (e, n):", st.session_state.public_key)
+    st.sidebar.write("Private Key (d, n):", st.session_state.private_key)
+
+tab1, tab2 = st.tabs(["Encrypt", "Decrypt"])
+
+with tab1:
+    st.header("Encrypt Message")
+    plaintext = st.text_area("Enter message to encrypt:")
+    
+    if st.button("Encrypt") and 'public_key' in st.session_state:
+        ciphertext = encrypt(st.session_state.public_key, plaintext)
+        st.session_state.ciphertext = ciphertext
+        st.write("Ciphertext (as numbers):")
+        st.code(ciphertext)
+        
+        # Save to session state for decryption
+        st.session_state.last_encrypted = ciphertext
+
+with tab2:
+    st.header("Decrypt Message")
+    
+    if 'last_encrypted' in st.session_state:
+        cipher_input = st.text_area("Enter ciphertext (comma-separated numbers):", 
+                                   value=",".join(map(str, st.session_state.last_encrypted)))
+    else:
+        cipher_input = st.text_area("Enter ciphertext (comma-separated numbers):")
+    
+    if st.button("Decrypt") and 'private_key' in st.session_state:
+        try:
+            cipher_numbers = [int(x.strip()) for x in cipher_input.split(",")]
+            plaintext = decrypt(st.session_state.private_key, cipher_numbers)
+            st.write("Decrypted Message:")
+            st.success(plaintext)
+        except Exception as e:
+            st.error(f"Error in decryption: {e}")
+
 st.write("---")
+st.write("""
+### How RSA Works:
+1. **Key Generation**:
+   - Choose two distinct primes p and q
+   - Compute n = p × q and φ(n) = (p-1)(q-1)
+   - Choose e where 1 < e < φ(n) and gcd(e, φ(n)) = 1
+   - Compute d ≡ e⁻¹ mod φ(n)
 
-# Display
-st.text_input("", st.session_state.equation, key="display", disabled=True)
-
-# Buttons
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.button("7", on_click=calculate, kwargs={"operation": "7"})
-    st.button("4", on_click=calculate, kwargs={"operation": "4"})
-    st.button("1", on_click=calculate, kwargs={"operation": "1"})
-    st.button("π", on_click=calculate, kwargs={"operation": "math.pi"})
-    st.button("sin", on_click=calculate, kwargs={"operation": "math.sin("})
-
-with col2:
-    st.button("8", on_click=calculate, kwargs={"operation": "8"})
-    st.button("5", on_click=calculate, kwargs={"operation": "5"})
-    st.button("2", on_click=calculate, kwargs={"operation": "2"})
-    st.button("e", on_click=calculate, kwargs={"operation": "math.e"})
-    st.button("cos", on_click=calculate, kwargs={"operation": "math.cos("})
-
-with col3:
-    st.button("9", on_click=calculate, kwargs={"operation": "9"})
-    st.button("6", on_click=calculate, kwargs={"operation": "6"})
-    st.button("3", on_click=calculate, kwargs={"operation": "3"})
-    st.button("√", on_click=calculate, kwargs={"operation": "math.sqrt("})
-    st.button("tan", on_click=calculate, kwargs={"operation": "math.tan("})
-
-with col4:
-    st.button("C", on_click=calculate, kwargs={"operation": "C"})
-    st.button("0", on_click=calculate, kwargs={"operation": "0"})
-    st.button(".", on_click=calculate, kwargs={"operation": "."})
-    st.button("^", on_click=calculate, kwargs={"operation": "**"})
-    st.button("log", on_click=calculate, kwargs={"operation": "math.log10("})
-
-# Memory Functions
-st.write("---")
-st.write("**Memory Functions**")
-mcol1, mcol2, mcol3, mcol4 = st.columns(4)
-with mcol1:
-    st.button("M+", on_click=calculate, kwargs={"operation": "M+"})
-with mcol2:
-    st.button("M-", on_click=calculate, kwargs={"operation": "M-"})
-with mcol3:
-    st.button("MR", on_click=calculate, kwargs={"operation": "MR"})
-with mcol4:
-    st.button("MC", on_click=calculate, kwargs={"operation": "MC"})
-
-st.write(f"Memory: {st.session_state.memory}")
+2. **Encryption**: c ≡ mᵉ mod n  
+3. **Decryption**: m ≡ cᵈ mod n
+""")
